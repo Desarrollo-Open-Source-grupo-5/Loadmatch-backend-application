@@ -35,11 +35,11 @@ The project is organized into bounded contexts following Layered Domain-Driven D
 ```text
 src/main/java/com/cargolinklabs/loadmatch/platform/
 ├── iam/               # Identity and Access Management (Users, Roles, Sign-up, Sign-in)
-├── profiles/          # Company and carrier profiles
+├── profiles/          # Shipper and carrier profiles
 ├── fleet/             # Carrier vehicles
-├── freightpublishing/ # Freight requests published by companies
-├── matching/          # Matching between freight requests and carriers
-├── tripexecution/     # Trip lifecycle and tracking
+├── freight/           # Load requests published by shippers (Freight Publishing)
+├── matching/          # Nearby available loads for carriers
+├── trip/              # Trip lifecycle and delivery confirmation (Trip Execution)
 └── shared/            # Shared kernel (Domain base aggregate, Result type, ProblemDetail, Concurrency, i18n)
 ```
 
