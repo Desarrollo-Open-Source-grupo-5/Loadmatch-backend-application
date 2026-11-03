@@ -117,6 +117,13 @@ docker run -p 8080:8080 \
   loadmatch-platform
 ```
 
+### 3) API Documentation
+Once running, access the interactive documentation at:
+- **Swagger UI:** `http://localhost:8080/swagger-ui/index.html`
+- **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`
+
+In Azure, replace `http://localhost:8080` with the URL of the App Service.
+
 ---
 
 ## Scripts and Commands
