@@ -62,4 +62,31 @@ public class Shipper extends AbstractDomainAggregateRoot<Shipper> {
     public void onRegistered() {
         this.registerDomainEvent(new ShipperRegisteredEvent(this.id.shipperId(), this.userId.userId(), this.ruc.ruc()));
     }
+
+    /**
+     * Updates the contact person and phone number of the shipper
+     * @param contactName the new contact person
+     * @param phoneNumber the new phone number
+     */
+    public void updateContactInfo(String contactName, PhoneNumber phoneNumber) {
+        if (contactName == null || contactName.isBlank()) {
+            throw new IllegalArgumentException("Contact name cannot be null or blank");
+        }
+        if (phoneNumber == null) {
+            throw new IllegalArgumentException("Phone number cannot be null");
+        }
+        this.contactName = contactName.trim();
+        this.phoneNumber = phoneNumber;
+    }
+
+    /**
+     * Updates the fiscal address where carriers pick up the cargo
+     * @param fiscalAddress the new address
+     */
+    public void updateFiscalAddress(Address fiscalAddress) {
+        if (fiscalAddress == null) {
+            throw new IllegalArgumentException("Fiscal address cannot be null");
+        }
+        this.fiscalAddress = fiscalAddress;
+    }
 }
