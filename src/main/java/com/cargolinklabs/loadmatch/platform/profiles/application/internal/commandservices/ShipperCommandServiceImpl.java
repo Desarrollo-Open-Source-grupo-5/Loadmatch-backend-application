@@ -4,6 +4,7 @@ import com.cargolinklabs.loadmatch.platform.profiles.application.commandservices
 import com.cargolinklabs.loadmatch.platform.profiles.application.internal.outboundservices.acl.ExternalIamService;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.aggregates.Shipper;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.commands.RegisterShipperCommand;
+import com.cargolinklabs.loadmatch.platform.profiles.domain.model.commands.UpdateShipperProfileCommand;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.valueobjects.Address;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.valueobjects.PhoneNumber;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.valueobjects.Ruc;
@@ -43,5 +44,17 @@ public class ShipperCommandServiceImpl implements ShipperCommandService {
                     shipper.onRegistered();
                     return shipperRepository.save(shipper);
                 });
+    }
+
+    @Override
+    public Result<Shipper, ApplicationError> handle(UpdateShipperProfileCommand command) {
+        var shipper = shipperRepository.findById(command.shipperId());
+        if (shipper.isEmpty()) {
+            return Result.failure(ApplicationError.notFound("Shipper", command.shipperId().shipperId().toString()));
+        }
+        shipper.get().updateContactInfo(command.contactName(), new PhoneNumber(command.phoneNumber()));
+        shipper.get().updateFiscalAddress(new Address(command.street(), command.district(),
+                command.province(), command.department()));
+        return Result.success(shipperRepository.save(shipper.get()));
     }
 }

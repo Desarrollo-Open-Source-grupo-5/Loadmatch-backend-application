@@ -3,6 +3,7 @@ package com.cargolinklabs.loadmatch.platform.profiles.application.internal.query
 import com.cargolinklabs.loadmatch.platform.profiles.application.queryservices.ShipperQueryService;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.aggregates.Shipper;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.queries.GetShipperByIdQuery;
+import com.cargolinklabs.loadmatch.platform.profiles.domain.model.queries.GetShipperByUserIdQuery;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.repositories.ShipperRepository;
 import org.springframework.stereotype.Service;
 
@@ -22,5 +23,10 @@ public class ShipperQueryServiceImpl implements ShipperQueryService {
     @Override
     public Optional<Shipper> handle(GetShipperByIdQuery query) {
         return shipperRepository.findById(query.shipperId());
+    }
+
+    @Override
+    public Optional<Shipper> handle(GetShipperByUserIdQuery query) {
+        return shipperRepository.findByUserId(query.userId());
     }
 }
