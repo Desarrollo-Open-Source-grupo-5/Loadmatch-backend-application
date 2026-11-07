@@ -12,8 +12,6 @@ import com.cargolinklabs.loadmatch.platform.shared.application.result.Result;
  */
 public interface VehicleCommandService {
     Result<Vehicle, ApplicationError> handle(RegisterVehicleCommand command);
-
     Result<Vehicle, ApplicationError> handle(UpdateVehicleCommand command);
-
     Result<Vehicle, ApplicationError> handle(DeactivateVehicleCommand command);
 }

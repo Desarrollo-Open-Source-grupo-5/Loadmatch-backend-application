@@ -11,6 +11,7 @@ import lombok.Getter;
 
 /**
  * Shipper aggregate root
+ * DE
  * <p>
  *     Represents the business (company) that publishes load requests. The RUC and the business name
  *     identify the company and cannot be changed by the shipper.

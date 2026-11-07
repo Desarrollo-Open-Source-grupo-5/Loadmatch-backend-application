@@ -27,7 +27,7 @@ public final class ResponseEntityAssembler {
      * @param successStatus HTTP status to use for successful responses
      * @param <T> success value type
      * @param <R> success response resource type
-     * @return response entity for success or failure
+     * @return response entity for success or failure CL
      */
     public static <T, R> ResponseEntity<?> toResponseEntityFromResult(
             Result<T, ApplicationError> result,

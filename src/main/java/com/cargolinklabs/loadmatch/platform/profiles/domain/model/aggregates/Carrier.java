@@ -7,6 +7,7 @@ import lombok.Getter;
 
 /**
  * Carrier aggregate root
+ * AU
  * <p>
  *     Represents the independent carrier that transports loads. A new carrier stays PENDING until its
  *     documentation is validated; only an ENABLED carrier can accept trips.
