@@ -16,19 +16,19 @@ import java.util.function.Function;
 public sealed interface Result<T, E> {
 
     /**
-     * Represents a successful result containing a value.
+     * Represents a successful result containing a value. CL
      */
     record Success<T, E>(T value) implements Result<T, E> {
     }
 
     /**
-     * Represents a failed result containing error information.
+     * Represents a failed result containing error information. AU
      */
     record Failure<T, E>(E error) implements Result<T, E> {
     }
 
     /**
-     * Creates a successful result with the given value.
+     * Creates a successful result with the given value. DE
      *
      * @param value the success value
      * @param <T>   the type of the value
@@ -40,7 +40,7 @@ public sealed interface Result<T, E> {
     }
 
     /**
-     * Creates a failed result with the given error.
+     * Creates a failed result with the given error. AI
      *
      * @param error the error information
      * @param <T>   the type of the value
@@ -52,21 +52,21 @@ public sealed interface Result<T, E> {
     }
 
     /**
-     * Returns true if this result is a success, false if it's a failure.
+     * Returns true if this result is a success, false if it's a failure. US
      */
     default boolean isSuccess() {
         return this instanceof Success;
     }
 
     /**
-     * Returns true if this result is a failure, false if it's a success.
+     * Returns true if this result is a failure, false if it's a success. ED
      */
     default boolean isFailure() {
         return this instanceof Failure;
     }
 
     /**
-     * Returns an Optional containing the value if this is a success, otherwise an empty Optional.
+     * Returns an Optional containing the value if this is a success, otherwise an empty Optional. HE
      */
     default Optional<T> toOptional() {
         return switch (this) {
@@ -76,7 +76,7 @@ public sealed interface Result<T, E> {
     }
 
     /**
-     * Extracts the value if successful, or returns the given default if failed.
+     * Extracts the value if successful, or returns the given default if failed. RE
      */
     default T getOrElse(T defaultValue) {
         return switch (this) {

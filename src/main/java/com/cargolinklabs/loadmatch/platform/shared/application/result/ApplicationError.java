@@ -23,7 +23,7 @@ public record ApplicationError(
     }
 
     /**
-     * Validation error: input data is invalid or violates constraints
+     * Validation error: input data is invalid or violates constraints CL
      */
     public static ApplicationError validationError(String fieldOrConcept, String reason) {
         return new ApplicationError(
@@ -33,7 +33,7 @@ public record ApplicationError(
     }
 
     /**
-     * Not found error: the requested resource does not exist
+     * Not found error: the requested resource does not exist AU
      */
     public static ApplicationError notFound(String resourceType, String identifier) {
         return new ApplicationError(
@@ -43,7 +43,7 @@ public record ApplicationError(
     }
 
     /**
-     * Business rule violation: operation violates domain constraints
+     * Business rule violation: operation violates domain constraints DE
      */
     public static ApplicationError businessRuleViolation(String rule, String reason) {
         return new ApplicationError(
@@ -53,7 +53,7 @@ public record ApplicationError(
     }
 
     /**
-     * Conflict error: operation cannot be completed due to conflicting state
+     * Conflict error: operation cannot be completed due to conflicting state AI
      */
     public static ApplicationError conflict(String resource, String reason) {
         return new ApplicationError(
@@ -63,7 +63,7 @@ public record ApplicationError(
     }
 
     /**
-     * Unexpected error: something went wrong that shouldn't have
+     * Unexpected error: something went wrong that shouldn't have USED
      */
     public static ApplicationError unexpected(String context, String reason) {
         return new ApplicationError(
