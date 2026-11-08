@@ -22,6 +22,7 @@ routine implementation details belong in commit history.
 - Architecture Decision Records in [`docs/adrs.md`](docs/adrs.md).
 - Contributor guidance in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - Changelog documentation in [`CHANGELOG.md`](CHANGELOG.md).
+- Demo users seeder for shippers and carriers, enabled with `LOADMATCH_SEED_ENABLED=true`.
 
 ## Release process
 
