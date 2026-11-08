@@ -3,6 +3,7 @@ package com.cargolinklabs.loadmatch.platform.profiles.application.internal.query
 import com.cargolinklabs.loadmatch.platform.profiles.application.queryservices.CarrierQueryService;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.aggregates.Carrier;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.queries.GetCarrierByIdQuery;
+import com.cargolinklabs.loadmatch.platform.profiles.domain.model.queries.GetCarrierByUserIdQuery;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.repositories.CarrierRepository;
 import org.springframework.stereotype.Service;
 
@@ -22,5 +23,10 @@ public class CarrierQueryServiceImpl implements CarrierQueryService {
     @Override
     public Optional<Carrier> handle(GetCarrierByIdQuery query) {
         return carrierRepository.findById(query.carrierId());
+    }
+
+    @Override
+    public Optional<Carrier> handle(GetCarrierByUserIdQuery query) {
+        return carrierRepository.findByUserId(query.userId());
     }
 }
