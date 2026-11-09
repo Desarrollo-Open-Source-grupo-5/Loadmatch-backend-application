@@ -71,6 +71,21 @@ Required environment variables (especially for the `prod` profile):
 | `DATABASE_PASSWORD`      | Database password        | `password`    |
 | `PORT`                   | Application port         | `8080`        |
 | `SPRING_PROFILES_ACTIVE` | Active Spring profile    | `dev`         |
+| `LOADMATCH_SEED_ENABLED` | Creates the demo users at startup | `true` in dev, `false` in prod |
+| `LOADMATCH_SEED_PASSWORD`| Password of the demo users | `Loadmatch123` |
+
+
+### Demo Users
+
+When `LOADMATCH_SEED_ENABLED=true`, the platform creates these users at startup (existing emails are skipped), so the
+web application can sign in before the sign-up flow exists. All of them share `LOADMATCH_SEED_PASSWORD`.
+
+| Email | Role | User id |
+|-------|------|---------|
+| `shipper1@loadmatch.demo` ... `shipper4@loadmatch.demo` | `ROLE_SHIPPER` | `a1000000-0000-4000-8000-00000000000N` |
+| `carrier1@loadmatch.demo` ... `carrier3@loadmatch.demo` | `ROLE_CARRIER` | `c1000000-0000-4000-8000-00000000000N` |
+
+The ids are fixed because the web application links each user with its profile through them.
 
 ---
 
