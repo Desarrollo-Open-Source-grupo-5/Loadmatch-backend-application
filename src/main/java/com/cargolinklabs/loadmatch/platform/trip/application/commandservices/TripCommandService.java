@@ -7,7 +7,9 @@ import com.cargolinklabs.loadmatch.platform.trip.domain.model.commands.AcceptLoa
 import com.cargolinklabs.loadmatch.platform.trip.domain.model.commands.CompleteUnconfirmedDeliveriesCommand;
 import com.cargolinklabs.loadmatch.platform.trip.domain.model.commands.ConfirmDeliveryCommand;
 import com.cargolinklabs.loadmatch.platform.trip.domain.model.commands.ObserveDeliveryCommand;
+import com.cargolinklabs.loadmatch.platform.trip.domain.model.commands.ReportIncidentCommand;
 import com.cargolinklabs.loadmatch.platform.trip.domain.model.commands.UpdateTripStatusCommand;
+import com.cargolinklabs.loadmatch.platform.trip.domain.model.entities.Incident;
 
 /**
  * Trip command service
@@ -26,6 +28,8 @@ public interface TripCommandService {
      * @return the updated trip or an application error
      */
     Result<Trip, ApplicationError> handle(UpdateTripStatusCommand command);
+
+    Result<Incident, ApplicationError> handle(ReportIncidentCommand command);
 
     /**
      * The shipper confirms that the delivery was received as agreed

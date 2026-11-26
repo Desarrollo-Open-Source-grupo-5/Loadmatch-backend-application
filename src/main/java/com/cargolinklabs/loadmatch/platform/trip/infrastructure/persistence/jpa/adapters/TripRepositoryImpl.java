@@ -10,6 +10,7 @@ import com.cargolinklabs.loadmatch.platform.trip.domain.repositories.TripReposit
 import com.cargolinklabs.loadmatch.platform.trip.infrastructure.persistence.jpa.assemblers.TripPersistenceAssembler;
 import com.cargolinklabs.loadmatch.platform.trip.infrastructure.persistence.jpa.repositories.TripPersistenceRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.Optional;
  * JPA adapter of the trip repository port
  */
 @Repository
+@Transactional(readOnly = true)
 public class TripRepositoryImpl implements TripRepository {
     private final TripPersistenceRepository tripPersistenceRepository;
     private final DomainEventPublisher domainEventPublisher;
@@ -32,6 +34,13 @@ public class TripRepositoryImpl implements TripRepository {
     @Override
     public Optional<Trip> findById(TripId id) {
         return tripPersistenceRepository.findById(id.tripId())
+                .map(TripPersistenceAssembler::toDomainFromPersistence);
+    }
+
+    @Override
+    @Transactional
+    public Optional<Trip> findByIdForUpdate(TripId id) {
+        return tripPersistenceRepository.findByIdForUpdate(id.tripId())
                 .map(TripPersistenceAssembler::toDomainFromPersistence);
     }
 
@@ -57,6 +66,7 @@ public class TripRepositoryImpl implements TripRepository {
     }
 
     @Override
+    @Transactional
     public Trip save(Trip trip) {
         var saved = tripPersistenceRepository.save(TripPersistenceAssembler.toPersistenceFromDomain(trip));
         domainEventPublisher.publishAndClearEvents(trip);
