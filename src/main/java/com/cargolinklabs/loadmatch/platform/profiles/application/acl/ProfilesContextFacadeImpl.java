@@ -10,6 +10,7 @@ import com.cargolinklabs.loadmatch.platform.profiles.domain.model.valueobjects.S
 import com.cargolinklabs.loadmatch.platform.profiles.interfaces.acl.ProfilesContextFacade;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -40,5 +41,17 @@ public class ProfilesContextFacadeImpl implements ProfilesContextFacade {
         return carrierQueryService.handle(new GetCarrierByIdQuery(new CarrierId(carrierId)))
                 .map(Carrier::canAcceptTrips)
                 .orElse(false);
+    }
+
+    @Override
+    public Optional<UUID> fetchUserIdByShipperId(UUID shipperId) {
+        return shipperQueryService.handle(new GetShipperByIdQuery(new ShipperId(shipperId)))
+                .map(shipper -> shipper.getUserId().userId());
+    }
+
+    @Override
+    public Optional<UUID> fetchUserIdByCarrierId(UUID carrierId) {
+        return carrierQueryService.handle(new GetCarrierByIdQuery(new CarrierId(carrierId)))
+                .map(carrier -> carrier.getUserId().userId());
     }
 }

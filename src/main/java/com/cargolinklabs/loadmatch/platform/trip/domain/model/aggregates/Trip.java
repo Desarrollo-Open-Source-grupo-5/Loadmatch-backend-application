@@ -1,7 +1,11 @@
 package com.cargolinklabs.loadmatch.platform.trip.domain.model.aggregates;
 
 import com.cargolinklabs.loadmatch.platform.shared.domain.model.aggregates.AbstractDomainAggregateRoot;
+import com.cargolinklabs.loadmatch.platform.trip.domain.model.entities.Incident;
 import com.cargolinklabs.loadmatch.platform.trip.domain.model.entities.TripStatusHistory;
+import com.cargolinklabs.loadmatch.platform.trip.domain.model.events.CargoDeliveredAtDestinationEvent;
+import com.cargolinklabs.loadmatch.platform.trip.domain.model.events.CargoPickedUpEvent;
+import com.cargolinklabs.loadmatch.platform.trip.domain.model.events.IncidentReportedEvent;
 import com.cargolinklabs.loadmatch.platform.trip.domain.model.events.TripCreatedEvent;
 import com.cargolinklabs.loadmatch.platform.trip.domain.model.valueobjects.*;
 import lombok.Getter;
@@ -10,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Trip aggregate root
@@ -32,6 +37,7 @@ public class Trip extends AbstractDomainAggregateRoot<Trip> {
     private String deliveryObservation;
     private LocalDateTime completedAt;
     private List<TripStatusHistory> history;
+    private List<Incident> incidents = new ArrayList<>();
 
     public Trip(LoadRequestId loadRequestId, ShipperId shipperId, CarrierId carrierId, VehicleId vehicleId) {
         if (loadRequestId == null || shipperId == null || carrierId == null || vehicleId == null) {
@@ -57,7 +63,8 @@ public class Trip extends AbstractDomainAggregateRoot<Trip> {
     public static Trip reconstitute(TripId id, LoadRequestId loadRequestId, ShipperId shipperId, CarrierId carrierId,
                                     VehicleId vehicleId, TripStatus status, LocalDateTime assignedAt,
                                     LocalDateTime deliveredAt, String deliveryEvidenceUrl, String deliveryObservation,
-                                    LocalDateTime completedAt, List<TripStatusHistory> history) {
+                                    LocalDateTime completedAt, List<TripStatusHistory> history,
+                                    List<Incident> incidents) {
         var trip = new Trip();
         trip.id = id;
         trip.loadRequestId = loadRequestId;
@@ -71,6 +78,7 @@ public class Trip extends AbstractDomainAggregateRoot<Trip> {
         trip.deliveryObservation = deliveryObservation;
         trip.completedAt = completedAt;
         trip.history = new ArrayList<>(history);
+        trip.incidents = new ArrayList<>(incidents);
         return trip;
     }
 
@@ -87,6 +95,19 @@ public class Trip extends AbstractDomainAggregateRoot<Trip> {
      */
     public List<TripStatusHistory> getHistory() {
         return Collections.unmodifiableList(this.history);
+    }
+
+    public List<Incident> getIncidents() {
+        return Collections.unmodifiableList(this.incidents);
+    }
+
+    public Incident reportIncident(UUID incidentId, IncidentType type, String description, String evidenceUrl) {
+        var incident = new Incident(incidentId, type, description, evidenceUrl, LocalDateTime.now());
+        transitionTo(TripStatus.DELAYED, "Incident reported: " + type.name());
+        this.incidents.add(incident);
+        registerDomainEvent(new IncidentReportedEvent(id.tripId(), shipperId.shipperId(), carrierId.carrierId(),
+                type.name()));
+        return incident;
     }
 
     /**
@@ -117,6 +138,11 @@ public class Trip extends AbstractDomainAggregateRoot<Trip> {
             this.deliveredAt = LocalDateTime.now();
         }
         transitionTo(newStatus, description != null && !description.isBlank() ? description : "Status updated by the carrier");
+        if (newStatus == TripStatus.CARGO_PICKED_UP) {
+            registerDomainEvent(new CargoPickedUpEvent(id.tripId(), shipperId.shipperId(), carrierId.carrierId()));
+        } else if (newStatus == TripStatus.DELIVERED) {
+            registerDomainEvent(new CargoDeliveredAtDestinationEvent(id.tripId(), shipperId.shipperId(), carrierId.carrierId()));
+        }
     }
 
     /**
