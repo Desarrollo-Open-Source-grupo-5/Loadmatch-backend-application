@@ -8,6 +8,7 @@ import java.util.UUID;
  * @param id the user identifier
  * @param email the email address
  * @param role the role name
+ * @param token the bearer token to send in the Authorization header
  */
-public record AuthenticatedUserResource(UUID id, String email, String role) {
+public record AuthenticatedUserResource(UUID id, String email, String role, String token) {
 }

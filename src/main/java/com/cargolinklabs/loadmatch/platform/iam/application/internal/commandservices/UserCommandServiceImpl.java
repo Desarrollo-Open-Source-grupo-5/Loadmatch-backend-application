@@ -3,6 +3,8 @@ package com.cargolinklabs.loadmatch.platform.iam.application.internal.commandser
 import com.cargolinklabs.loadmatch.platform.iam.application.commandservices.UserCommandService;
 import com.cargolinklabs.loadmatch.platform.iam.application.internal.outboundservices.hashing.HashingService;
 import com.cargolinklabs.loadmatch.platform.iam.domain.model.aggregates.User;
+import com.cargolinklabs.loadmatch.platform.iam.application.commandservices.AuthenticatedUser;
+import com.cargolinklabs.loadmatch.platform.iam.application.internal.outboundservices.tokens.TokenService;
 import com.cargolinklabs.loadmatch.platform.iam.domain.model.commands.SignInCommand;
 import com.cargolinklabs.loadmatch.platform.iam.domain.model.commands.SignUpCommand;
 import com.cargolinklabs.loadmatch.platform.iam.domain.model.valueobjects.EmailAddress;
@@ -19,10 +21,13 @@ import org.springframework.stereotype.Service;
 public class UserCommandServiceImpl implements UserCommandService {
     private final UserRepository userRepository;
     private final HashingService hashingService;
+    private final TokenService tokenService;
 
-    public UserCommandServiceImpl(UserRepository userRepository, HashingService hashingService) {
+    public UserCommandServiceImpl(UserRepository userRepository, HashingService hashingService,
+                                  TokenService tokenService) {
         this.userRepository = userRepository;
         this.hashingService = hashingService;
+        this.tokenService = tokenService;
     }
 
     @Override
@@ -38,7 +43,7 @@ public class UserCommandServiceImpl implements UserCommandService {
     }
 
     @Override
-    public Result<User, ApplicationError> handle(SignInCommand command) {
+    public Result<AuthenticatedUser, ApplicationError> handle(SignInCommand command) {
         var user = userRepository.findByEmail(new EmailAddress(command.email()));
         if (user.isEmpty() || !hashingService.matches(command.password(), user.get().getPassword())) {
             return Result.failure(ApplicationError.validationError(
@@ -49,6 +54,8 @@ public class UserCommandServiceImpl implements UserCommandService {
                     "active-account", "The account is deactivated"));
         }
         user.get().recordAccess();
-        return Result.success(userRepository.save(user.get()));
+        var savedUser = userRepository.save(user.get());
+        var token = tokenService.generateToken(savedUser.getEmail().address());
+        return Result.success(new AuthenticatedUser(savedUser, token));
     }
 }

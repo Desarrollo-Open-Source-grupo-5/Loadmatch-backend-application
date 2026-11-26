@@ -1,6 +1,6 @@
 package com.cargolinklabs.loadmatch.platform.iam.interfaces.rest.transform;
 
-import com.cargolinklabs.loadmatch.platform.iam.domain.model.aggregates.User;
+import com.cargolinklabs.loadmatch.platform.iam.application.commandservices.AuthenticatedUser;
 import com.cargolinklabs.loadmatch.platform.iam.interfaces.rest.resources.AuthenticatedUserResource;
 
 /**
@@ -11,7 +11,9 @@ public final class AuthenticatedUserResourceFromEntityAssembler {
     private AuthenticatedUserResourceFromEntityAssembler() {
     }
 
-    public static AuthenticatedUserResource toResourceFromEntity(User user) {
-        return new AuthenticatedUserResource(user.getId().userId(), user.getEmail().address(), user.getRoleName());
+    public static AuthenticatedUserResource toResourceFromEntity(AuthenticatedUser authenticatedUser) {
+        var user = authenticatedUser.user();
+        return new AuthenticatedUserResource(user.getId().userId(), user.getEmail().address(),
+                user.getRoleName(), authenticatedUser.token());
     }
 }
