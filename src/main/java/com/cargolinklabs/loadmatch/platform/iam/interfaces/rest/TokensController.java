@@ -32,9 +32,9 @@ public class TokensController {
     }
 
     @PostMapping
-    @Operation(summary = "Sign in", description = "Authenticates a shipper or carrier with email and password")
+    @Operation(summary = "Sign in", description = "Authenticates a shipper or carrier with email and password and returns a JWT bearer token")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User authenticated"),
+            @ApiResponse(responseCode = "200", description = "User authenticated; returns the bearer token"),
             @ApiResponse(responseCode = "400", description = "Invalid email or password")
     })
     public ResponseEntity<?> generateToken(@Valid @RequestBody SignInResource resource) {

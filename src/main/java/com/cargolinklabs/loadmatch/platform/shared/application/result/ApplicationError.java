@@ -53,6 +53,16 @@ public record ApplicationError(
     }
 
     /**
+     * Forbidden error: the current user is not allowed to perform the operation
+     */
+    public static ApplicationError forbidden(String rule, String reason) {
+        return new ApplicationError(
+                "FORBIDDEN",
+                "Operation not allowed: %s".formatted(rule),
+                reason);
+    }
+
+    /**
      * Conflict error: operation cannot be completed due to conflicting state
      */
     public static ApplicationError conflict(String resource, String reason) {

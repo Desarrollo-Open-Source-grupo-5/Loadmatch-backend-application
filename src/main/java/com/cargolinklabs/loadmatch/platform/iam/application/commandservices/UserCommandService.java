@@ -22,5 +22,5 @@ public interface UserCommandService {
      * @param command the sign in command
      * @return the authenticated user or an application error
      */
-    Result<User, ApplicationError> handle(SignInCommand command);
+    Result<AuthenticatedUser, ApplicationError> handle(SignInCommand command);
 }
