@@ -129,18 +129,20 @@ We introduce a functional, sealed `Result<T, E>` algebraic data type in `com.car
 Accepted
 
 ### Context
-The platform requires secure authentication and role-based authorization for REST endpoints (companies, carriers, and administrators) while maintaining statelessness suitable for cloud horizontal scaling on Azure.
+The platform requires secure authentication and role-based authorization for REST endpoints used by its two user roles, shippers (companies) and carriers, while remaining stateless so it can scale horizontally in the cloud. There is no administrator role: carrier and vehicle documents are validated automatically by the platform.
 
 ### Decision
 We implement stateless JWT (JSON Web Token) authentication integrated with Spring Security:
-1. **JWT Generation & Validation**: `TokenService` / `TokenServiceImpl` issues and validates signed HMAC-SHA256 JWT tokens.
+1. **JWT Generation & Validation**: `TokenService` / `TokenServiceImpl` issues and validates HMAC-SHA signed tokens whose subject is the user email. The secret and the expiration days are read from `authorization.jwt.secret` and `authorization.jwt.expiration.days` (`JWT_SECRET` and `JWT_EXPIRATION_DAYS` environment variables).
 2. **Password Hashing**: `HashingService` / `HashingServiceImpl` uses BCrypt password hashing.
-3. **Security DSL**: `WebSecurityConfiguration` configures stateless session management (`SessionCreationPolicy.STATELESS`), method security, and JWT bearer token extraction filters.
-4. **Roles**: Standardized roles seeded automatically on startup.
+3. **Sign In**: `POST /api/v1/tokens` validates the credentials and returns the user id, email, role and bearer token.
+4. **Request Filter**: `BearerAuthorizationRequestFilter` reads the `Authorization: Bearer <token>` header, validates the token and loads the user through `UserDetailsServiceImpl`; disabled users are not authenticated.
+5. **Security Configuration**: `WebSecurityConfiguration` sets stateless session management (`SessionCreationPolicy.STATELESS`), CORS, public endpoints (sign in, sign up, vehicle types and Swagger UI) and role-based access rules per endpoint with `ROLE_SHIPPER` and `ROLE_CARRIER`. Unauthenticated requests return 401 and requests from the wrong role return 403.
+6. **Roles**: Defined by the `Roles` enumeration (`ROLE_SHIPPER`, `ROLE_CARRIER`) and assigned when the account is created.
 
 ### Consequences
-- **Positive**: Stateless, scalable authentication; standards-compliant Bearer token authorization; declarative endpoint protection with `@PreAuthorize`.
-- **Negative**: Tokens cannot be revoked before expiration without maintaining a distributed token blacklist.
+- **Positive**: Stateless, scalable authentication; standards-compliant Bearer token authorization; endpoint protection centralized in a single security configuration.
+- **Negative**: Tokens cannot be revoked before expiration without maintaining a token blacklist; the JWT secret must be configured in every deployment environment.
 
 ---
 
