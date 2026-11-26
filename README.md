@@ -15,7 +15,7 @@ LoadMatch Platform is a RESTful API built on the foundations of Domain-Driven De
 - **Documentation:** SpringDoc OpenAPI (Swagger UI)
 - **Build Tool:** Maven 3.10+
 - **Containerization:** Docker
-- **Cloud:** Microsoft Azure (App Service and Azure Database for PostgreSQL)
+- **Cloud:** Render (Web Service with Docker and Render PostgreSQL)
 
 ---
 
@@ -56,7 +56,7 @@ Each bounded context follows a classic 4-layer structure:
 The project uses profile-based configuration located in `src/main/resources`:
 - `application.properties`: Shared defaults, database naming strategy, i18n, and Virtual Threads configuration.
 - `application-dev.properties`: Development settings (default).
-- `application-prod.properties`: Production settings for Azure.
+- `application-prod.properties`: Production settings for Render.
 
 ### Environment Variables
 
@@ -137,7 +137,7 @@ Once running, access the interactive documentation at:
 - **Swagger UI:** `http://localhost:8080/swagger-ui/index.html`
 - **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`
 
-In Azure, replace `http://localhost:8080` with the URL of the App Service.
+In production, replace `http://localhost:8080` with `https://loadmatch-backend-application.onrender.com`.
 
 ---
 

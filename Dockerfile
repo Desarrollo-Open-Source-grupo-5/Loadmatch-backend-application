@@ -47,4 +47,3 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 # - DATABASE_PORT: The port of the database to connect to.
 # - PORT: The port on which the application will run (default is 8080).
 # - SPRING_PROFILES_ACTIVE: The active Spring profile (Must be 'prod' to use the runtime configuration).
-# - WEBSITES_PORT: The port exposed by the container in Azure App Service (Must be 8080).

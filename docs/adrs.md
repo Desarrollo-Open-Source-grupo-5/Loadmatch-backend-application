@@ -18,7 +18,7 @@ This document maintains Architecture Decision Records (ADRs) for the **LoadMatch
 - [ADR-010: Adoption of RFC 9457 Problem Details for REST Error Responses](#adr-010-adoption-of-rfc-9457-problem-details-for-rest-error-responses)
 - [ADR-011: Virtual Threads and Concurrency Optimization via Project Loom](#adr-011-virtual-threads-and-concurrency-optimization-via-project-loom)
 - [ADR-012: PostgreSQL as Relational Database](#adr-012-postgresql-as-relational-database)
-- [ADR-013: Containerized Deployment on Microsoft Azure](#adr-013-containerized-deployment-on-microsoft-azure)
+- [ADR-013: Containerized Deployment on Render](#adr-013-containerized-deployment-on-render)
 
 ---
 
@@ -220,7 +220,7 @@ Modern cloud-native APIs and Spring Boot 4 provide native support for **RFC 9457
 ### Decision
 1. Use `ProblemDetailFromApplicationErrorAssembler` in `shared.interfaces.rest.transform` to build error responses.
 2. Map application error codes to standardized type URIs under `/api/v1/errors/{error-slug}` (e.g., `/api/v1/errors/not-found`, `/api/v1/errors/validation-error`).
-3. `GlobalExceptionHandler` returns `ResponseEntity<ProblemDetail>` with localized `detail` strings (English and Spanish) and structured `invalidParams` arrays for validation errors.
+3. `GlobalExceptionHandler` returns `ResponseEntity<ProblemDetail>` with localized `detail` strings (English `en_US` and Latin American Spanish `es_419`, English by default) and structured `invalidParams` arrays for validation errors.
 4. Align assembler naming with codebase conventions: `[Target]From[Source]Assembler`.
 
 ### Consequences
@@ -261,7 +261,7 @@ The platform stores relational data with strong consistency requirements (users,
 2. Use **UUID** primary keys assigned by the domain model through typed identity value objects (e.g., `UserId`, `ShipperId`, `LoadRequestId`), so the identifier exists before the aggregate is persisted and sequential volumes are not exposed in URLs. `AuditableAbstractPersistenceEntity` provides the `id` together with `created_at` and `updated_at` audit columns.
 3. Give **each bounded context its own PostgreSQL schema** (`iam`, `profiles`, `fleet`, `freight`, `trip`), created automatically through `hibernate.hbm2ddl.create_namespaces`, as defined in the Database Design section of the project report.
 4. Name tables in pluralized snake case through `SnakeCaseWithPluralizedTablePhysicalNamingStrategy` (e.g., `LoadRequest` → `load_requests`).
-5. Use **Azure Database for PostgreSQL Flexible Server** in production, with SSL required.
+5. Use a **Render PostgreSQL** managed instance in production, with SSL required.
 
 ### Consequences
 - **Positive**: Consistency between the domain model, the database design of the report, and the implementation; identifiers can be generated without a database round trip; physical isolation of bounded contexts.
@@ -269,7 +269,7 @@ The platform stores relational data with strong consistency requirements (users,
 
 ---
 
-## ADR-013: Containerized Deployment on Microsoft Azure
+## ADR-013: Containerized Deployment on Render
 
 ### Status
 Accepted
@@ -279,9 +279,9 @@ The Web Services must be publicly deployed so the LoadMatch web application can 
 
 ### Decision
 1. Package the application with a multi-stage **Dockerfile** (Maven build stage and Eclipse Temurin 27 JRE runtime stage).
-2. Deploy the container to **Azure App Service**, using the `prod` profile and reading database settings from environment variables (`DATABASE_URL`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USER`, `DATABASE_PASSWORD`).
-3. Bind the application to the port injected by the platform through `server.port=${PORT:8080}` and `WEBSITES_PORT=8080`.
+2. Deploy the container as a **Render Web Service** built from the Dockerfile, using the `prod` profile and reading database settings from environment variables (`DATABASE_URL`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USER`, `DATABASE_PASSWORD`).
+3. Bind the application to the port injected by the platform through `server.port=${PORT:8080}`, and set `JWT_SECRET` in the Render environment.
 
 ### Consequences
 - **Positive**: Reproducible builds, environment parity, and managed hosting without server administration.
-- **Negative**: Requires managing Azure resources, credentials, and costs within the student subscription.
+- **Negative**: On the free plan the service sleeps after a period of inactivity, so the first request after idle time is slow, and the free PostgreSQL instance has a limited lifetime.

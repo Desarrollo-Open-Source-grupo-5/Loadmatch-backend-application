@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Configures the OpenAPI specification exposed by the platform.
  * <p>
- *     No servers are declared, so Swagger UI calls the same host it is served from (local or Azure).
+ *     No servers are declared, so Swagger UI calls the same host it is served from (local or Render).
  * </p>
  */
 @Configuration
