@@ -15,6 +15,8 @@ import java.util.Optional;
 public interface TripRepository {
     Optional<Trip> findById(TripId id);
 
+    Optional<Trip> findByIdForUpdate(TripId id);
+
     List<Trip> findByCarrierId(CarrierId carrierId);
 
     List<Trip> findByShipperId(ShipperId shipperId);

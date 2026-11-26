@@ -1,5 +1,6 @@
 package com.cargolinklabs.loadmatch.platform.profiles.interfaces.acl;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -26,4 +27,8 @@ public interface ProfilesContextFacade {
      * @return true when the carrier exists and is enabled to accept trips
      */
     boolean isCarrierEnabled(UUID carrierId);
+
+    Optional<UUID> fetchUserIdByShipperId(UUID shipperId);
+
+    Optional<UUID> fetchUserIdByCarrierId(UUID carrierId);
 }

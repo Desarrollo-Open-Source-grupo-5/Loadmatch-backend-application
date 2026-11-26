@@ -52,4 +52,8 @@ public class TripPersistenceEntity extends AuditableAbstractPersistenceEntity {
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("registeredAt ASC")
     private List<TripStatusHistoryPersistenceEntity> history = new ArrayList<>();
+
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL)
+    @OrderBy("reportedAt ASC")
+    private List<IncidentPersistenceEntity> incidents = new ArrayList<>();
 }
