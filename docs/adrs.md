@@ -18,7 +18,7 @@ This document maintains Architecture Decision Records (ADRs) for the **LoadMatch
 - [ADR-010: Adoption of RFC 9457 Problem Details for REST Error Responses](#adr-010-adoption-of-rfc-9457-problem-details-for-rest-error-responses)
 - [ADR-011: Virtual Threads and Concurrency Optimization via Project Loom](#adr-011-virtual-threads-and-concurrency-optimization-via-project-loom)
 - [ADR-012: PostgreSQL as Relational Database](#adr-012-postgresql-as-relational-database)
-- [ADR-013: Containerized Deployment on Microsoft Azure](#adr-013-containerized-deployment-on-microsoft-azure)
+- [ADR-013: Containerized Deployment on Render](#adr-013-containerized-deployment-on-render)
 
 ---
 
@@ -129,18 +129,20 @@ We introduce a functional, sealed `Result<T, E>` algebraic data type in `com.car
 Accepted
 
 ### Context
-The platform requires secure authentication and role-based authorization for REST endpoints (companies, carriers, and administrators) while maintaining statelessness suitable for cloud horizontal scaling on Azure.
+The platform requires secure authentication and role-based authorization for REST endpoints used by its two user roles, shippers (companies) and carriers, while remaining stateless so it can scale horizontally in the cloud. There is no administrator role: carrier and vehicle documents are validated automatically by the platform.
 
 ### Decision
 We implement stateless JWT (JSON Web Token) authentication integrated with Spring Security:
-1. **JWT Generation & Validation**: `TokenService` / `TokenServiceImpl` issues and validates signed HMAC-SHA256 JWT tokens.
+1. **JWT Generation & Validation**: `TokenService` / `TokenServiceImpl` issues and validates HMAC-SHA signed tokens whose subject is the user email. The secret and the expiration days are read from `authorization.jwt.secret` and `authorization.jwt.expiration.days` (`JWT_SECRET` and `JWT_EXPIRATION_DAYS` environment variables).
 2. **Password Hashing**: `HashingService` / `HashingServiceImpl` uses BCrypt password hashing.
-3. **Security DSL**: `WebSecurityConfiguration` configures stateless session management (`SessionCreationPolicy.STATELESS`), method security, and JWT bearer token extraction filters.
-4. **Roles**: Standardized roles seeded automatically on startup.
+3. **Sign In**: `POST /api/v1/tokens` validates the credentials and returns the user id, email, role and bearer token.
+4. **Request Filter**: `BearerAuthorizationRequestFilter` reads the `Authorization: Bearer <token>` header, validates the token and loads the user through `UserDetailsServiceImpl`; disabled users are not authenticated.
+5. **Security Configuration**: `WebSecurityConfiguration` sets stateless session management (`SessionCreationPolicy.STATELESS`), CORS, public endpoints (sign in, sign up, vehicle types and Swagger UI) and role-based access rules per endpoint with `ROLE_SHIPPER` and `ROLE_CARRIER`. Unauthenticated requests return 401 and requests from the wrong role return 403.
+6. **Roles**: Defined by the `Roles` enumeration (`ROLE_SHIPPER`, `ROLE_CARRIER`) and assigned when the account is created.
 
 ### Consequences
-- **Positive**: Stateless, scalable authentication; standards-compliant Bearer token authorization; declarative endpoint protection with `@PreAuthorize`.
-- **Negative**: Tokens cannot be revoked before expiration without maintaining a distributed token blacklist.
+- **Positive**: Stateless, scalable authentication; standards-compliant Bearer token authorization; endpoint protection centralized in a single security configuration.
+- **Negative**: Tokens cannot be revoked before expiration without maintaining a token blacklist; the JWT secret must be configured in every deployment environment.
 
 ---
 
@@ -218,7 +220,7 @@ Modern cloud-native APIs and Spring Boot 4 provide native support for **RFC 9457
 ### Decision
 1. Use `ProblemDetailFromApplicationErrorAssembler` in `shared.interfaces.rest.transform` to build error responses.
 2. Map application error codes to standardized type URIs under `/api/v1/errors/{error-slug}` (e.g., `/api/v1/errors/not-found`, `/api/v1/errors/validation-error`).
-3. `GlobalExceptionHandler` returns `ResponseEntity<ProblemDetail>` with localized `detail` strings (English and Spanish) and structured `invalidParams` arrays for validation errors.
+3. `GlobalExceptionHandler` returns `ResponseEntity<ProblemDetail>` with localized `detail` strings (English `en_US` and Latin American Spanish `es_419`, English by default) and structured `invalidParams` arrays for validation errors.
 4. Align assembler naming with codebase conventions: `[Target]From[Source]Assembler`.
 
 ### Consequences
@@ -259,7 +261,7 @@ The platform stores relational data with strong consistency requirements (users,
 2. Use **UUID** primary keys assigned by the domain model through typed identity value objects (e.g., `UserId`, `ShipperId`, `LoadRequestId`), so the identifier exists before the aggregate is persisted and sequential volumes are not exposed in URLs. `AuditableAbstractPersistenceEntity` provides the `id` together with `created_at` and `updated_at` audit columns.
 3. Give **each bounded context its own PostgreSQL schema** (`iam`, `profiles`, `fleet`, `freight`, `trip`), created automatically through `hibernate.hbm2ddl.create_namespaces`, as defined in the Database Design section of the project report.
 4. Name tables in pluralized snake case through `SnakeCaseWithPluralizedTablePhysicalNamingStrategy` (e.g., `LoadRequest` → `load_requests`).
-5. Use **Azure Database for PostgreSQL Flexible Server** in production, with SSL required.
+5. Use a **Render PostgreSQL** managed instance in production, with SSL required.
 
 ### Consequences
 - **Positive**: Consistency between the domain model, the database design of the report, and the implementation; identifiers can be generated without a database round trip; physical isolation of bounded contexts.
@@ -267,7 +269,7 @@ The platform stores relational data with strong consistency requirements (users,
 
 ---
 
-## ADR-013: Containerized Deployment on Microsoft Azure
+## ADR-013: Containerized Deployment on Render
 
 ### Status
 Accepted
@@ -277,9 +279,9 @@ The Web Services must be publicly deployed so the LoadMatch web application can 
 
 ### Decision
 1. Package the application with a multi-stage **Dockerfile** (Maven build stage and Eclipse Temurin 27 JRE runtime stage).
-2. Deploy the container to **Azure App Service**, using the `prod` profile and reading database settings from environment variables (`DATABASE_URL`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USER`, `DATABASE_PASSWORD`).
-3. Bind the application to the port injected by the platform through `server.port=${PORT:8080}` and `WEBSITES_PORT=8080`.
+2. Deploy the container as a **Render Web Service** built from the Dockerfile, using the `prod` profile and reading database settings from environment variables (`DATABASE_URL`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USER`, `DATABASE_PASSWORD`).
+3. Bind the application to the port injected by the platform through `server.port=${PORT:8080}`, and set `JWT_SECRET` in the Render environment.
 
 ### Consequences
 - **Positive**: Reproducible builds, environment parity, and managed hosting without server administration.
-- **Negative**: Requires managing Azure resources, credentials, and costs within the student subscription.
+- **Negative**: On the free plan the service sleeps after a period of inactivity, so the first request after idle time is slow, and the free PostgreSQL instance has a limited lifetime.
