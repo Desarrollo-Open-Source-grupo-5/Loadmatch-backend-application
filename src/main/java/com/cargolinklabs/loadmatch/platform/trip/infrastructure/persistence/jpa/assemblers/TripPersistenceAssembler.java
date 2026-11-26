@@ -1,8 +1,10 @@
 package com.cargolinklabs.loadmatch.platform.trip.infrastructure.persistence.jpa.assemblers;
 
 import com.cargolinklabs.loadmatch.platform.trip.domain.model.aggregates.Trip;
+import com.cargolinklabs.loadmatch.platform.trip.domain.model.entities.Incident;
 import com.cargolinklabs.loadmatch.platform.trip.domain.model.entities.TripStatusHistory;
 import com.cargolinklabs.loadmatch.platform.trip.domain.model.valueobjects.*;
+import com.cargolinklabs.loadmatch.platform.trip.infrastructure.persistence.jpa.entities.IncidentPersistenceEntity;
 import com.cargolinklabs.loadmatch.platform.trip.infrastructure.persistence.jpa.entities.TripPersistenceEntity;
 import com.cargolinklabs.loadmatch.platform.trip.infrastructure.persistence.jpa.entities.TripStatusHistoryPersistenceEntity;
 
@@ -28,6 +30,7 @@ public final class TripPersistenceAssembler {
         entity.setDeliveryObservation(trip.getDeliveryObservation());
         entity.setCompletedAt(trip.getCompletedAt());
         trip.getHistory().forEach(history -> entity.getHistory().add(toPersistenceFromDomain(history, entity)));
+        trip.getIncidents().forEach(incident -> entity.getIncidents().add(toPersistenceFromDomain(incident, entity)));
         return entity;
     }
 
@@ -44,7 +47,24 @@ public final class TripPersistenceAssembler {
                 entity.getDeliveryEvidenceUrl(),
                 entity.getDeliveryObservation(),
                 entity.getCompletedAt(),
-                entity.getHistory().stream().map(TripPersistenceAssembler::toDomainFromPersistence).toList());
+                entity.getHistory().stream().map(TripPersistenceAssembler::toDomainFromPersistence).toList(),
+                entity.getIncidents().stream().map(TripPersistenceAssembler::toDomainFromPersistence).toList());
+    }
+
+    private static IncidentPersistenceEntity toPersistenceFromDomain(Incident incident, TripPersistenceEntity trip) {
+        var entity = new IncidentPersistenceEntity();
+        entity.setId(incident.id());
+        entity.setTrip(trip);
+        entity.setType(incident.type());
+        entity.setDescription(incident.description());
+        entity.setEvidenceUrl(incident.evidenceUrl());
+        entity.setReportedAt(incident.reportedAt());
+        return entity;
+    }
+
+    private static Incident toDomainFromPersistence(IncidentPersistenceEntity entity) {
+        return new Incident(entity.getId(), entity.getType(), entity.getDescription(), entity.getEvidenceUrl(),
+                entity.getReportedAt());
     }
 
     private static TripStatusHistoryPersistenceEntity toPersistenceFromDomain(TripStatusHistory history,
