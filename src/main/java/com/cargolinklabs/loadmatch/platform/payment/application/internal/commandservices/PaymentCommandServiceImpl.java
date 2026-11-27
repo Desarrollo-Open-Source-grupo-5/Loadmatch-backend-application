@@ -51,9 +51,24 @@ public class PaymentCommandServiceImpl implements PaymentCommandService {
             return Result.failure(ApplicationError.businessRuleViolation("trip-must-be-completed",
                     "Only a completed trip can be paid, current status is %s".formatted(trip.get().status())));
         }
-        var payment = new Payment(tripId, new ShipperId(trip.get().shipperId()),
-                new CarrierId(trip.get().carrierId()), Money.ofSoles(command.totalAmount()), platformFeeRate);
+        var existing = paymentRepository.findByTripId(tripId);
+        if (existing.isPresent() && existing.get().getStatus() != PaymentStatus.REJECTED) {
+            return Result.failure(ApplicationError.conflict("Payment",
+                    "The trip already has a %s payment".formatted(existing.get().getStatus())));
+        }
+        var payment = existing.map(this::retried).orElseGet(() -> new Payment(tripId,
+                new ShipperId(trip.get().shipperId()), new CarrierId(trip.get().carrierId()),
+                Money.ofSoles(command.totalAmount()), platformFeeRate));
         return Result.success(paymentRepository.save(charge(payment, command)));
+    }
+
+    /**
+     * Enables a rejected payment again so the shipper can retry with another instrument (US20, scenario 2).
+     * The retry charges the total amount registered in the first attempt.
+     */
+    private Payment retried(Payment payment) {
+        payment.retry();
+        return payment;
     }
 
     private Payment charge(Payment payment, CreatePaymentCommand command) {
