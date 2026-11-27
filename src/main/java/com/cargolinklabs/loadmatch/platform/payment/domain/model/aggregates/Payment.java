@@ -1,5 +1,6 @@
 package com.cargolinklabs.loadmatch.platform.payment.domain.model.aggregates;
 
+import com.cargolinklabs.loadmatch.platform.payment.domain.model.events.PaymentSucceededEvent;
 import com.cargolinklabs.loadmatch.platform.payment.domain.model.valueobjects.*;
 import com.cargolinklabs.loadmatch.platform.shared.domain.model.aggregates.AbstractDomainAggregateRoot;
 import lombok.Getter;
@@ -77,6 +78,71 @@ public class Payment extends AbstractDomainAggregateRoot<Payment> {
         payment.enabledAt = enabledAt;
         payment.processedAt = processedAt;
         return payment;
+    }
+
+    /**
+     * Starts the charge with the instrument approved by the shipper in the gateway
+     * @param method the payment method
+     * @param token the gateway token of the approved instrument
+     */
+    public void process(PaymentMethod method, PaymentToken token) {
+        ensureStatus(PaymentStatus.ENABLED, PaymentStatus.PROCESSING);
+        if (method == null || token == null) {
+            throw new IllegalArgumentException("Payment method and token are required");
+        }
+        this.method = method;
+        this.status = PaymentStatus.PROCESSING;
+        this.attempts++;
+    }
+
+    /**
+     * The gateway confirmed the charge, so the payment is completed and the carrier payout is announced
+     * @param reference the reference of the confirmed transaction
+     */
+    public void confirm(GatewayReference reference) {
+        ensureStatus(PaymentStatus.PROCESSING, PaymentStatus.COMPLETED);
+        if (reference == null) {
+            throw new IllegalArgumentException("Gateway reference is required to complete the payment");
+        }
+        this.gatewayReference = reference;
+        this.processedAt = reference.processedAt();
+        this.status = PaymentStatus.COMPLETED;
+        registerDomainEvent(new PaymentSucceededEvent(id.paymentId(), tripId.tripId(), shipperId.shipperId(),
+                carrierId.carrierId(), payoutAmount.amount(), payoutAmount.currency()));
+    }
+
+    /**
+     * The gateway rejected the charge
+     * @param errorCode the error code returned by the gateway
+     */
+    public void reject(String errorCode) {
+        ensureStatus(PaymentStatus.PROCESSING, PaymentStatus.REJECTED);
+        if (errorCode == null || errorCode.isBlank()) {
+            throw new IllegalArgumentException("Gateway error code is required to reject the payment");
+        }
+        this.errorCode = errorCode;
+        this.processedAt = LocalDateTime.now();
+        this.status = PaymentStatus.REJECTED;
+    }
+
+    /**
+     * Enables a rejected payment again so the shipper can retry with another instrument
+     */
+    public void retry() {
+        ensureStatus(PaymentStatus.REJECTED, PaymentStatus.ENABLED);
+        this.errorCode = null;
+        this.processedAt = null;
+        this.status = PaymentStatus.ENABLED;
+    }
+
+    public boolean isCompleted() {
+        return this.status == PaymentStatus.COMPLETED;
+    }
+
+    private void ensureStatus(PaymentStatus expected, PaymentStatus target) {
+        if (this.status != expected) {
+            throw new IllegalStateException("A payment cannot move from %s to %s".formatted(this.status, target));
+        }
     }
 
     private static Money calculateFee(Money totalAmount, BigDecimal platformFeeRate) {
