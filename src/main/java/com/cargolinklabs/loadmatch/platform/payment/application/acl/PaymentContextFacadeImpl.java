@@ -1,22 +1,29 @@
 package com.cargolinklabs.loadmatch.platform.payment.application.acl;
 
+import com.cargolinklabs.loadmatch.platform.payment.domain.model.aggregates.Payment;
+import com.cargolinklabs.loadmatch.platform.payment.domain.model.valueobjects.TripId;
+import com.cargolinklabs.loadmatch.platform.payment.domain.repositories.PaymentRepository;
 import com.cargolinklabs.loadmatch.platform.payment.interfaces.acl.PaymentContextFacade;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 /**
- * Payment context facade implementation
- * <p>
- *     Answers that no trip is paid until the payment repository is introduced with the PayPal charge (T49 (US20)),
- *     so Rating can integrate against the agreed contract in the meantime.
- * </p>
+ * Payment context facade implementation that delegates to the payment repository
  */
 @Service
 public class PaymentContextFacadeImpl implements PaymentContextFacade {
+    private final PaymentRepository paymentRepository;
+
+    public PaymentContextFacadeImpl(PaymentRepository paymentRepository) {
+        this.paymentRepository = paymentRepository;
+    }
 
     @Override
     public boolean isTripPaid(UUID tripId) {
-        return false;
+        if (tripId == null) {
+            return false;
+        }
+        return paymentRepository.findByTripId(new TripId(tripId)).map(Payment::isCompleted).orElse(false);
     }
 }
