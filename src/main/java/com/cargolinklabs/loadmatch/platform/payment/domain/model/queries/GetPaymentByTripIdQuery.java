@@ -6,6 +6,7 @@ import com.cargolinklabs.loadmatch.platform.payment.domain.model.valueobjects.Tr
  * Query to get the payment of a trip
  *
  * @param tripId the trip identifier
+ * @param requesterEmail the email of the authenticated user, who must be the shipper or the carrier of the trip
  */
-public record GetPaymentByTripIdQuery(TripId tripId) {
+public record GetPaymentByTripIdQuery(TripId tripId, String requesterEmail) {
 }
