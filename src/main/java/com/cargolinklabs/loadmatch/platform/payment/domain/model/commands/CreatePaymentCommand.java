@@ -12,8 +12,10 @@ import java.util.UUID;
  * @param totalAmount the total amount charged to the shipper, in soles
  * @param method the payment method
  * @param paymentToken the gateway token of the approved instrument
+ * @param payerEmail the email of the authenticated shipper
  */
-public record CreatePaymentCommand(UUID tripId, BigDecimal totalAmount, PaymentMethod method, String paymentToken) {
+public record CreatePaymentCommand(UUID tripId, BigDecimal totalAmount, PaymentMethod method, String paymentToken,
+                                   String payerEmail) {
     public CreatePaymentCommand {
         if (tripId == null || totalAmount == null || method == null || paymentToken == null) {
             throw new IllegalArgumentException("tripId, totalAmount, method and paymentToken cannot be null");
