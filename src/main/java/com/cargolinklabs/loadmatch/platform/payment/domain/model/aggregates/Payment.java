@@ -53,6 +53,32 @@ public class Payment extends AbstractDomainAggregateRoot<Payment> {
     private Payment() {
     }
 
+    /**
+     * Rebuilds a payment from its persisted state without raising domain events
+     */
+    public static Payment reconstitute(PaymentId id, TripId tripId, ShipperId shipperId, CarrierId carrierId,
+                                       Money totalAmount, Money platformFee, Money payoutAmount,
+                                       PaymentMethod method, PaymentStatus status, GatewayReference gatewayReference,
+                                       String errorCode, int attempts, LocalDateTime enabledAt,
+                                       LocalDateTime processedAt) {
+        var payment = new Payment();
+        payment.id = id;
+        payment.tripId = tripId;
+        payment.shipperId = shipperId;
+        payment.carrierId = carrierId;
+        payment.totalAmount = totalAmount;
+        payment.platformFee = platformFee;
+        payment.payoutAmount = payoutAmount;
+        payment.method = method;
+        payment.status = status;
+        payment.gatewayReference = gatewayReference;
+        payment.errorCode = errorCode;
+        payment.attempts = attempts;
+        payment.enabledAt = enabledAt;
+        payment.processedAt = processedAt;
+        return payment;
+    }
+
     private static Money calculateFee(Money totalAmount, BigDecimal platformFeeRate) {
         if (platformFeeRate == null || platformFeeRate.signum() < 0 || platformFeeRate.compareTo(BigDecimal.ONE) >= 0) {
             throw new IllegalArgumentException("Platform fee rate must be between 0 and 1");
