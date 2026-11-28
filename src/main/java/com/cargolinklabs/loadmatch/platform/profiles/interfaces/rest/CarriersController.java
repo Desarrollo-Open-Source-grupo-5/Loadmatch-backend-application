@@ -2,7 +2,6 @@ package com.cargolinklabs.loadmatch.platform.profiles.interfaces.rest;
 
 import com.cargolinklabs.loadmatch.platform.profiles.application.commandservices.CarrierCommandService;
 import com.cargolinklabs.loadmatch.platform.profiles.application.queryservices.CarrierQueryService;
-import com.cargolinklabs.loadmatch.platform.profiles.domain.model.commands.EnableCarrierCommand;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.queries.GetCarrierByIdQuery;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.queries.GetCarrierByUserIdQuery;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.valueobjects.CarrierId;
@@ -64,17 +63,6 @@ public class CarriersController {
                 .map(CarrierResourceFromEntityAssembler::toResourceFromEntity)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @PostMapping("/{carrierId}/enablement")
-    @Operation(summary = "Enable a carrier",
-            description = "Enables the carrier to accept trips. Temporary endpoint until the Document Validation bounded context is implemented.")
-    public ResponseEntity<?> enableCarrier(@PathVariable UUID carrierId) {
-        var result = carrierCommandService.handle(new EnableCarrierCommand(new CarrierId(carrierId)));
-        return ResponseEntityAssembler.toResponseEntityFromResult(
-                result,
-                CarrierResourceFromEntityAssembler::toResourceFromEntity,
-                HttpStatus.OK);
     }
 
     @GetMapping

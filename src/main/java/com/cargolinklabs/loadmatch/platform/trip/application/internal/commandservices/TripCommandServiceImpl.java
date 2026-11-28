@@ -63,9 +63,13 @@ public class TripCommandServiceImpl implements TripCommandService {
     @Transactional
     public Result<Trip, ApplicationError> handle(AcceptLoadRequestCommand command) {
         var carrierId = new CarrierId(command.carrierId());
+        if (!externalProfilesService.isCarrierOwner(carrierId, command.carrierEmail())) {
+            return Result.failure(ApplicationError.forbidden("carrier-owner",
+                    "Only the authenticated carrier can accept a load request for this profile"));
+        }
         if (!externalProfilesService.isCarrierEnabled(carrierId)) {
-            return Result.failure(ApplicationError.businessRuleViolation("carrier-enabled",
-                    "The carrier must complete the validation of its profile before accepting trips"));
+            return Result.failure(ApplicationError.forbidden("carrier-enabled",
+                    "The carrier must complete document validation before accepting trips"));
         }
         var loadRequestId = new LoadRequestId(command.loadRequestId());
         if (!externalFreightService.isLoadRequestAvailable(loadRequestId)) {
