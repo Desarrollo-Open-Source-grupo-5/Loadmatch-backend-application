@@ -25,4 +25,31 @@ class TripTest {
         assertEquals(TripStatus.ASSIGNED, trip.getStatus());
         assertTrue(trip.isInProgress());
         assertEquals(1, trip.getHistory().size());
+    }
+
+    @Test
+    void updateStatusToDeliveredWithoutEvidenceThrowsException() {
+        var trip = new Trip(
+                new LoadRequestId(UUID.randomUUID()),
+                new ShipperId(UUID.randomUUID()),
+                new CarrierId(UUID.randomUUID()),
+                new VehicleId(UUID.randomUUID())
+        );
+
+        assertThrows(IllegalArgumentException.class,
+                () -> trip.updateStatus(TripStatus.DELIVERED, "Delivered", " "));
+    }
+
+    @Test
+    void confirmReceiptBeforeDeliveryThrowsException() {
+        var trip = new Trip(
+                new LoadRequestId(UUID.randomUUID()),
+                new ShipperId(UUID.randomUUID()),
+                new CarrierId(UUID.randomUUID()),
+                new VehicleId(UUID.randomUUID())
+        );
+
+        assertThrows(IllegalStateException.class, trip::confirmReceipt);
+    }
 }
+
