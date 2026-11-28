@@ -28,6 +28,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,10 +52,11 @@ public class TripsController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Trip created"),
             @ApiResponse(responseCode = "409", description = "Load request no longer available"),
-            @ApiResponse(responseCode = "422", description = "Carrier not enabled to accept trips")
+            @ApiResponse(responseCode = "403", description = "Carrier not enabled to accept trips or carrier profile does not belong to the authenticated user")
     })
-    public ResponseEntity<?> acceptLoadRequest(@Valid @RequestBody AcceptLoadRequestResource resource) {
-        var result = tripCommandService.handle(AcceptLoadRequestCommandFromResourceAssembler.toCommandFromResource(resource));
+    public ResponseEntity<?> acceptLoadRequest(@Valid @RequestBody AcceptLoadRequestResource resource, Principal principal) {
+        var result = tripCommandService.handle(
+                AcceptLoadRequestCommandFromResourceAssembler.toCommandFromResource(resource, principal.getName()));
         return ResponseEntityAssembler.toResponseEntityFromResult(
                 result,
                 TripResourceFromEntityAssembler::toResourceFromEntity,

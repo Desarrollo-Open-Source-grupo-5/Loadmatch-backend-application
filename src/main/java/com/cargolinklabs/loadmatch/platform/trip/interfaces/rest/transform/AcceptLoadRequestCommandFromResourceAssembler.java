@@ -11,7 +11,7 @@ public final class AcceptLoadRequestCommandFromResourceAssembler {
     private AcceptLoadRequestCommandFromResourceAssembler() {
     }
 
-    public static AcceptLoadRequestCommand toCommandFromResource(AcceptLoadRequestResource resource) {
-        return new AcceptLoadRequestCommand(resource.loadRequestId(), resource.carrierId(), resource.vehicleId());
+    public static AcceptLoadRequestCommand toCommandFromResource(AcceptLoadRequestResource resource, String carrierEmail) {
+        return new AcceptLoadRequestCommand(resource.loadRequestId(), resource.carrierId(), resource.vehicleId(), carrierEmail);
     }
 }

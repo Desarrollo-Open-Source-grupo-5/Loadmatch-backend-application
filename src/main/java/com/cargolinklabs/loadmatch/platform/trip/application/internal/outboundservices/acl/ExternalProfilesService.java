@@ -27,11 +27,15 @@ public class ExternalProfilesService {
         return profilesContextFacade.isCarrierEnabled(carrierId.carrierId());
     }
 
-    public boolean isAssignedCarrier(Trip trip, String email) {
+    public boolean isCarrierOwner(CarrierId carrierId, String email) {
         return iamContextFacade.fetchUserIdByEmail(email)
-                .filter(userId -> profilesContextFacade.fetchUserIdByCarrierId(trip.getCarrierId().carrierId())
-                        .filter(userId::equals).isPresent())
+                .flatMap(userId -> profilesContextFacade.fetchUserIdByCarrierId(carrierId.carrierId())
+                        .filter(userId::equals))
                 .isPresent();
+    }
+
+    public boolean isAssignedCarrier(Trip trip, String email) {
+        return isCarrierOwner(trip.getCarrierId(), email);
     }
 
     public boolean isParticipant(Trip trip, String email) {

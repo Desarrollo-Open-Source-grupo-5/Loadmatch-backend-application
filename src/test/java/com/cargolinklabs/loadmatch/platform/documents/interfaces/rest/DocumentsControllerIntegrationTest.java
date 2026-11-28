@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -60,11 +61,21 @@ class DocumentsControllerIntegrationTest {
         var other = registerCarrier();
         mvc.perform(get(DOCUMENT_TYPES)).andExpect(status().isUnauthorized());
 
+        assertCarrierCanAcceptTrips(owner, false);
+        attemptTrip(owner, owner.id()).andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+
         var plate = registerVehicle(owner);
         var expiration = LocalDate.now().plusYears(1).toString();
         var license = upload(owner, "DRIVER_LICENSE", null, expiration);
         var insurance = upload(owner, "SOAT", plate, expiration);
+        assertCarrierCanAcceptTrips(owner, false);
         var registration = upload(owner, "VEHICLE_REGISTRATION", plate, null);
+
+        assertCarrierCanAcceptTrips(owner, true);
+        // The load is intentionally absent: reaching the availability check proves the carrier passed the gate.
+        attemptTrip(owner, owner.id()).andExpect(status().isConflict());
+        attemptTrip(other, owner.id()).andExpect(status().isForbidden());
 
         assertThat(events.stream(DocumentValidatedEvent.class)
                 .filter(event -> event.carrierId().toString().equals(owner.id()))
@@ -121,6 +132,21 @@ class DocumentsControllerIntegrationTest {
         mvc.perform(get(DOCUMENTS).param("carrierId", carrier.id()).header(HttpHeaders.AUTHORIZATION, carrier.bearer()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    private void assertCarrierCanAcceptTrips(CarrierSession carrier, boolean enabled) throws Exception {
+        mvc.perform(get("/api/v1/carriers/{carrierId}", carrier.id())
+                        .header(HttpHeaders.AUTHORIZATION, carrier.bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.canAcceptTrips").value(enabled));
+    }
+
+    private ResultActions attemptTrip(CarrierSession caller, String carrierId) throws Exception {
+        return mvc.perform(post("/api/v1/trips").header(HttpHeaders.AUTHORIZATION, caller.bearer())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"loadRequestId": "%s", "carrierId": "%s", "vehicleId": "%s"}
+                        """.formatted(UUID.randomUUID(), carrierId, UUID.randomUUID())));
     }
 
     private MvcResult upload(CarrierSession carrier, String code, String plate, String expiration) throws Exception {
