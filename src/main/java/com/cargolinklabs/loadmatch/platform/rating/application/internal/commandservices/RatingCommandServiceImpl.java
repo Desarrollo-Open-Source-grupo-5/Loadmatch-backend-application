@@ -1,6 +1,7 @@
 package com.cargolinklabs.loadmatch.platform.rating.application.internal.commandservices;
 
 import com.cargolinklabs.loadmatch.platform.rating.application.commandservices.RatingCommandService;
+import com.cargolinklabs.loadmatch.platform.rating.application.internal.outboundservices.acl.ExternalPaymentService;
 import com.cargolinklabs.loadmatch.platform.rating.application.internal.outboundservices.acl.ExternalTripService;
 import com.cargolinklabs.loadmatch.platform.rating.domain.model.aggregates.Rating;
 import com.cargolinklabs.loadmatch.platform.rating.domain.model.commands.RegisterRatingCommand;
@@ -20,11 +21,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class RatingCommandServiceImpl implements RatingCommandService {
     private final RatingRepository ratingRepository;
     private final ExternalTripService externalTripService;
+    private final ExternalPaymentService externalPaymentService;
 
     public RatingCommandServiceImpl(RatingRepository ratingRepository,
-                                    ExternalTripService externalTripService) {
+                                    ExternalTripService externalTripService,
+                                    ExternalPaymentService externalPaymentService) {
         this.ratingRepository = ratingRepository;
         this.externalTripService = externalTripService;
+        this.externalPaymentService = externalPaymentService;
     }
 
     @Override
@@ -49,6 +53,12 @@ public class RatingCommandServiceImpl implements RatingCommandService {
             return Result.failure(ApplicationError.forbidden(
                     "RATER_MISMATCH",
                     "Only participants of the trip can submit a rating"));
+        }
+
+        if (command.raterType() == RaterType.CARRIER && !externalPaymentService.isTripPaid(command.tripId())) {
+            return Result.failure(ApplicationError.businessRuleViolation(
+                    "TRIP_NOT_PAID",
+                    "Carriers can rate shippers only after the trip is paid"));
         }
 
         if (ratingRepository.existsByTripIdAndRaterId(command.tripId(), command.raterId())) {
