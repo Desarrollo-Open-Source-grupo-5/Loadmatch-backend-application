@@ -3,6 +3,7 @@ package com.cargolinklabs.loadmatch.platform.profiles.domain.model.aggregates;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.events.ShipperRegisteredEvent;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.valueobjects.Address;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.valueobjects.PhoneNumber;
+import com.cargolinklabs.loadmatch.platform.profiles.domain.model.valueobjects.Reputation;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.valueobjects.Ruc;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.valueobjects.ShipperId;
 import com.cargolinklabs.loadmatch.platform.profiles.domain.model.valueobjects.UserId;
@@ -25,6 +26,7 @@ public class Shipper extends AbstractDomainAggregateRoot<Shipper> {
     private String contactName;
     private PhoneNumber phoneNumber;
     private Address fiscalAddress;
+    private Reputation reputation;
 
     public Shipper(UserId userId, Ruc ruc, String businessName, String contactName,
                    PhoneNumber phoneNumber, Address fiscalAddress) {
@@ -44,15 +46,18 @@ public class Shipper extends AbstractDomainAggregateRoot<Shipper> {
         this.contactName = contactName.trim();
         this.phoneNumber = phoneNumber;
         this.fiscalAddress = fiscalAddress;
+        this.reputation = Reputation.initial();
     }
 
     /**
      * Rebuilds a shipper from its persisted state without raising domain events
      */
     public static Shipper reconstitute(ShipperId id, UserId userId, Ruc ruc, String businessName,
-                                       String contactName, PhoneNumber phoneNumber, Address fiscalAddress) {
+                                       String contactName, PhoneNumber phoneNumber, Address fiscalAddress,
+                                       Reputation reputation) {
         var shipper = new Shipper(userId, ruc, businessName, contactName, phoneNumber, fiscalAddress);
         shipper.id = id;
+        shipper.reputation = reputation != null ? reputation : Reputation.initial();
         return shipper;
     }
 
@@ -88,5 +93,13 @@ public class Shipper extends AbstractDomainAggregateRoot<Shipper> {
             throw new IllegalArgumentException("Fiscal address cannot be null");
         }
         this.fiscalAddress = fiscalAddress;
+    }
+
+    /**
+     * Registers a new rating score and updates the shipper reputation
+     * @param score the rating score from 1 to 5
+     */
+    public void registerNewRating(int score) {
+        this.reputation = this.reputation.addScore(score);
     }
 }

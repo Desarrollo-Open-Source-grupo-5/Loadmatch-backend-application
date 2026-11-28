@@ -26,6 +26,8 @@ public final class CarrierPersistenceAssembler {
         entity.setOperatingZone(carrier.getOperatingZone());
         entity.setPhotoUrl(carrier.getPhotoUrl());
         entity.setEnablementStatus(carrier.getEnablementStatus());
+        entity.setReputationAverage(carrier.getReputation().average());
+        entity.setReputationTotalRatings(carrier.getReputation().totalRatings());
         return entity;
     }
 
@@ -41,6 +43,7 @@ public final class CarrierPersistenceAssembler {
                 new PhoneNumber(entity.getPhoneNumber()),
                 entity.getOperatingZone(),
                 entity.getPhotoUrl(),
-                entity.getEnablementStatus());
+                entity.getEnablementStatus(),
+                new Reputation(entity.getReputationAverage(), entity.getReputationTotalRatings()));
     }
 }

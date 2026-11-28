@@ -51,4 +51,10 @@ public class CarrierPersistenceEntity extends AuditableAbstractPersistenceEntity
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private EnablementStatus enablementStatus;
+
+    @Column(nullable = false)
+    private double reputationAverage = 0.0;
+
+    @Column(nullable = false)
+    private int reputationTotalRatings = 0;
 }

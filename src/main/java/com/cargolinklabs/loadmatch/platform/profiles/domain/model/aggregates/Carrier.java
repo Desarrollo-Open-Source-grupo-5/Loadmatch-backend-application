@@ -24,6 +24,7 @@ public class Carrier extends AbstractDomainAggregateRoot<Carrier> {
     private String operatingZone;
     private String photoUrl;
     private EnablementStatus enablementStatus;
+    private Reputation reputation;
 
     public Carrier(UserId userId, String firstNames, String lastNames, Dni dni, DriverLicense license,
                    PhoneNumber phoneNumber, String operatingZone) {
@@ -48,6 +49,7 @@ public class Carrier extends AbstractDomainAggregateRoot<Carrier> {
         this.phoneNumber = phoneNumber;
         this.operatingZone = operatingZone;
         this.enablementStatus = EnablementStatus.PENDING;
+        this.reputation = Reputation.initial();
     }
 
     private Carrier() {
@@ -59,7 +61,7 @@ public class Carrier extends AbstractDomainAggregateRoot<Carrier> {
      */
     public static Carrier reconstitute(CarrierId id, UserId userId, String firstNames, String lastNames, Dni dni,
                                        DriverLicense license, PhoneNumber phoneNumber, String operatingZone,
-                                       String photoUrl, EnablementStatus enablementStatus) {
+                                       String photoUrl, EnablementStatus enablementStatus, Reputation reputation) {
         var carrier = new Carrier();
         carrier.id = id;
         carrier.userId = userId;
@@ -71,6 +73,7 @@ public class Carrier extends AbstractDomainAggregateRoot<Carrier> {
         carrier.operatingZone = operatingZone;
         carrier.photoUrl = photoUrl;
         carrier.enablementStatus = enablementStatus;
+        carrier.reputation = reputation != null ? reputation : Reputation.initial();
         return carrier;
     }
 
@@ -112,5 +115,13 @@ public class Carrier extends AbstractDomainAggregateRoot<Carrier> {
      */
     public String getFullName() {
         return "%s %s".formatted(this.firstNames, this.lastNames);
+    }
+
+    /**
+     * Registers a new rating score and updates the carrier reputation
+     * @param score the rating score from 1 to 5
+     */
+    public void registerNewRating(int score) {
+        this.reputation = this.reputation.addScore(score);
     }
 }

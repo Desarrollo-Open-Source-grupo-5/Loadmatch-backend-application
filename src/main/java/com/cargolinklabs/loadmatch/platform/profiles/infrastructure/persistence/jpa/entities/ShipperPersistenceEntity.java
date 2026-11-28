@@ -19,6 +19,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 public class ShipperPersistenceEntity extends AuditableAbstractPersistenceEntity {
+
     @Column(nullable = false, unique = true)
     private UUID userId;
 
@@ -45,4 +46,10 @@ public class ShipperPersistenceEntity extends AuditableAbstractPersistenceEntity
 
     @Column(nullable = false, length = 80)
     private String fiscalDepartment;
+
+    @Column(nullable = false)
+    private double reputationAverage = 0.0;
+
+    @Column(nullable = false)
+    private int reputationTotalRatings = 0;
 }

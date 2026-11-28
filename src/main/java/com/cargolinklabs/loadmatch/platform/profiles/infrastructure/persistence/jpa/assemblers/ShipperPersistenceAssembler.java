@@ -24,6 +24,8 @@ public final class ShipperPersistenceAssembler {
         entity.setFiscalDistrict(shipper.getFiscalAddress().district());
         entity.setFiscalProvince(shipper.getFiscalAddress().province());
         entity.setFiscalDepartment(shipper.getFiscalAddress().department());
+        entity.setReputationAverage(shipper.getReputation().average());
+        entity.setReputationTotalRatings(shipper.getReputation().totalRatings());
         return entity;
     }
 
@@ -36,6 +38,7 @@ public final class ShipperPersistenceAssembler {
                 entity.getContactName(),
                 new PhoneNumber(entity.getPhoneNumber()),
                 new Address(entity.getFiscalStreet(), entity.getFiscalDistrict(),
-                        entity.getFiscalProvince(), entity.getFiscalDepartment()));
+                        entity.getFiscalProvince(), entity.getFiscalDepartment()),
+                new Reputation(entity.getReputationAverage(), entity.getReputationTotalRatings()));
     }
 }
